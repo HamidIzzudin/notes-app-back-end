@@ -5,5 +5,5 @@ class ClientError extends Error {
     this.statusCode = statusCode;
   }
 }
- 
+
 export default ClientError;

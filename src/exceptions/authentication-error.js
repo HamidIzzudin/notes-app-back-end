@@ -1,9 +1,9 @@
 import ClientError from './client-error.js';
 
-class AuthorizationError extends ClientError {
+class AuthenticationError extends ClientError {
   constructor(message) {
-    super(message, 403);
-    this.name = 'AuthorizationError';
+    super(message, 401);
+    this.name = 'AuthenticationError';
   }
 }
-export default AuthorizationError;
+export default AuthenticationError;

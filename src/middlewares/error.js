@@ -1,6 +1,6 @@
 import response from '../utils/response.js';
 import { ClientError } from '../exceptions/index.js';
- 
+// eslint-disable-next-line no-unused-vars
 const ErrorHandler = (err, req, res, next) => {
   // Handle ClientError and its subclasses (InvariantError, NotFoundError)
   if (err instanceof ClientError) {
@@ -15,5 +15,5 @@ const ErrorHandler = (err, req, res, next) => {
   console.error('Unhandled error:', err);
   return response(res, status, message, null);
 };
- 
+
 export default ErrorHandler;
