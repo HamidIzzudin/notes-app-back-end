@@ -3,13 +3,20 @@ import response from '../../../utils/response.js';
 import InvariantError from '../../../exceptions/invariant-error.js';
 import NotFoundError from '../../../exceptions/not-found-error.js';
 
+// Middleware: cek duplikat username dari raw body SEBELUM validasi Joi
+export const verifyUsername = async (req, res, next) => {
+  const { username } = req.body || {};
+  if (username) {
+    const isUsernameExist = await UserRepositories.verifyNewUsername(username);
+    if (isUsernameExist) {
+      return next(new InvariantError('Gagal menambahkan user. Username sudah digunakan.'));
+    }
+  }
+  return next();
+};
+
 export const createUser = async (req, res, next) => {
   const { username, password, fullname } = req.validated;
-
-  const isUsernameExist = await UserRepositories.verifyNewUsername(username);
-  if (isUsernameExist) {
-    return next(new InvariantError('Gagal menambahkan user. Username sudah digunakan.'));
-  }
 
   const user = await UserRepositories.createUser({
     username,

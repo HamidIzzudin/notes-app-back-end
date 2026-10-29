@@ -1,0 +1,2179 @@
+{
+  "info": {
+    "_postman_id": "0e01f199-6a8f-4a9c-853c-d66ac6374c00",
+    "name": "Notes API Test",
+    "description": "### Welcome to Postman! This is your first collection.\n\nCollections are your starting point for building and testing APIs. You can use this one to:\n\n• Group related requests  \n• Test your API in real-world scenarios  \n• Document and share your requests\n\nUpdate the name and overview whenever you’re ready to make it yours.\n\n[Learn more about Postman Collections.](https://learning.postman.com/docs/collections/collections-overview/)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "58921991",
+    "_collection_link": "https://go.postman.co/collection/58921991-0e01f199-6a8f-4a9c-853c-d66ac6374c00?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Adding User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"response status code should have 400 value\", function () {\n    pm.response.to.have.status(400);\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"username\" : \"{{$timestamp}}-{{newUsername}}\",\r\n    \"password\" : \"{{newPassword}}\",\r\n    \"fullName\" : \"{{newFullname}}\"\r\n}   ",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/users",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Adding User with Exist Username",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "/* referensi: https://learning.postman.com/docs/writing-scripts/script-references/postman-sandbox-api-reference/#sending-requests-from-scripts */\r\n \r\nconst postRequest = {\r\n    url: 'http://localhost:3000/users',\r\n    method: 'POST',\r\n    header: {\r\n    'Content-Type': 'application/json',\r\n    },\r\n    body: {\r\n        mode: 'raw',\r\n        raw: JSON.stringify({\r\n            username: 'testing',\r\n            password: pm.environment.get('newPassword'),\r\n            fullname: pm.environment.get('newFullname')\r\n        }),\r\n    },\r\n};\r\n \r\npm.sendRequest(postRequest, (error, response) => {\r\n    console.log(error ? error : response.json());\r\n});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response status code should have 400 value', () => {\r\n   pm.response.to.have.status(400);\r\n}); \r\n \r\npm.test('response Content-Type header should have application/json value', () => {\r\n  pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8');\r\n}); \r\n \r\npm.test('response body should an object', () => {\r\n    const responseJson = pm.response.json();\r\n    pm.expect(responseJson).to.be.an('object');\r\n});\r\n \r\npm.test('response body should have correct property and value', () => {\r\n    const responseJson = pm.response.json();\r\n \r\n    pm.expect(responseJson).to.ownProperty('status');\r\n    pm.expect(responseJson.status).to.equals('failed');\r\n    pm.expect(responseJson).to.ownProperty('message');\r\n    pm.expect(responseJson.message).to.equals('Gagal menambahkan user. Username sudah digunakan.');\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"username\" : \"testing\",\r\n    \"password\" : \"{{newPassword}}\",\r\n    \"fullName\" : \"{{newUsername}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:3000/users",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Adding User with Bad User Payload",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let badUserPayloads = pm.environment.get('badUserPayloads');\r\n \r\nif (!badUserPayloads || badUserPayloads.length === 0) {\r\n    badUserPayloads = [\r\n        { password: 'secret', fullname: 'John Doe' },\r\n        { username: 1, password: 'secret', fullname: 'John Doe' },\r\n        { username: 'johndoe', fullname: 'John Doe' },\r\n        { username: 'johndoe', password: true, fullname: 'John Doe' },\r\n        { username: 'johndoe', password: 'secret'},\r\n        { username: 'johndoe', password: 'secret', fullname: 0 },\r\n    ]\r\n}\r\n \r\nconst currentBadUserPayload = badUserPayloads.shift();\r\npm.environment.set('currentBadUserPayload', JSON.stringify(currentBadUserPayload));\r\npm.environment.set('badUserPayloads', badUserPayloads);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response status code should have 400 value', () => {\r\n   pm.response.to.have.status(400);\r\n}); \r\n \r\npm.test('response Content-Type header should have application/json value', () => {\r\n  pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8');\r\n}); \r\n \r\npm.test('response body should an object', () => {\r\n    const responseJson = pm.response.json();\r\n    pm.expect(responseJson).to.be.an('object');\r\n});\r\n \r\npm.test('response body should have correct property and value', () => {\r\n    const responseJson = pm.response.json();\r\n    pm.expect(responseJson).to.ownProperty('status');\r\n    pm.expect(responseJson.status).to.equals('failed');\r\n    pm.expect(responseJson).to.ownProperty('message');\r\n    pm.expect(responseJson.message).to.not.equals(' ');\r\n    pm.expect(responseJson.message).to.not.equals(null);\r\n});\r\n \r\nconst repeatRequestUntilDatasetEmpty = () => {\r\n    const badUserPayloads = pm.environment.get('badUserPayloads');\r\n \r\n    if(badUserPayloads && badUserPayloads.length > 0) {\r\n        postman.setNextRequest('Adding User with Bad User Payload');\r\n    }\r\n}\r\n \r\nrepeatRequestUntilDatasetEmpty();"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{{currentBadUserPayload}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:3000/users",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Getting User By Correct Id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response status code should have 200 value', () => {\r\n    pm.response.to.have.status(200);\r\n});\r\n \r\npm.test('response Content-Type header should have application/json value', () => {\r\n  pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8');\r\n}); \r\n \r\npm.test('response body should an object', () => {\r\n    const responseJson = pm.response.json();\r\n    pm.expect(responseJson).to.be.an('object');\r\n});\r\n \r\npm.test('response body should have correct property and value', () => {\r\n    const responseJson = pm.response.json();\r\n \r\n    pm.expect(responseJson).to.have.ownProperty('status');\r\n    pm.expect(responseJson.status).to.equals('success');\r\n    pm.expect(responseJson).to.have.ownProperty('data');\r\n    pm.expect(responseJson.data).to.be.an('object');\r\n});\r\n \r\npm.test('response body data should contain user object', () => {\r\n    const { data } = pm.response.json();\r\n \r\n    pm.expect(data).to.have.ownProperty('user');\r\n    pm.expect(data.user).to.be.an('object');\r\n});\r\n \r\npm.test('user object should contain only id, username, and fullname with correct value', () => {\r\n    const { data: { user } } = pm.response.json();\r\n \r\n    pm.expect(user).to.have.ownProperty('id');\r\n    pm.expect(user.id).to.equals(pm.environment.get('currentUserId'));\r\n    pm.expect(user).to.have.ownProperty('username');\r\n    pm.expect(user.username).to.includes(pm.environment.get('newUsername'));\r\n    pm.expect(user).to.have.ownProperty('fullname');\r\n    pm.expect(user.fullname).to.equals(pm.environment.get('newFullname'));\r\n});\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:3000/users/{{currentUserId}}",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "users",
+                "{{currentUserId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Getting User By Incorrect Id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response status code should have 404 value', () => {\r\n    pm.response.to.have.status(404);\r\n});\r\n \r\npm.test('response Content-Type header should have application/json value', () => {\r\n  pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8');\r\n}); \r\n \r\npm.test('response body should an object', () => {\r\n    const responseJson = pm.response.json();\r\n    pm.expect(responseJson).to.be.an('object');\r\n});\r\n \r\npm.test('response body should have correct property and value', () => {\r\n    const responseJson = pm.response.json();\r\n \r\n    pm.expect(responseJson).to.have.ownProperty('status');\r\n    pm.expect(responseJson.status).to.equals('failed');\r\n    pm.expect(responseJson).to.have.ownProperty('message');\r\n    pm.expect(responseJson.message).to.equals('User tidak ditemukan');\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "localhost:3000/users/xxxx",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "users",
+                "xxxx"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Search Users by Username Related to Dicoding",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Menambahkan user dengan username dicoding\r\nconst addDicodingUserRequest = {\r\n    method: 'POST',\r\n    url: 'http://localhost:3000/users',\r\n    header: {\r\n        'Content-Type': 'application/json',\r\n    },\r\n    body: {\r\n        mode: 'raw',\r\n        raw: JSON.stringify({\r\n            username: 'dicoding',\r\n            password: pm.environment.get('newPassword'),\r\n            fullname: 'Dicoding',\r\n        }),\r\n    },\r\n};\r\npm.sendRequest(addDicodingUserRequest, (error, response) => {\r\n    console.log(error ? error : response);\r\n});\r\n// menambahkan user dengan username \"dicoding_indonesia\"\r\nconst addDicodingIndonesiaUserRequest = {\r\n    method: 'POST',\r\n    url: 'http://localhost:3000/users',\r\n    header: {\r\n        'Content-Type': 'application/json',\r\n    },\r\n    body: {\r\n        mode: 'raw',\r\n        raw: JSON.stringify({\r\n            username: 'dicoding_indonesia',\r\n            password: pm.environment.get('newPassword'),\r\n            fullname: 'Dicoding Indonesia',\r\n        }),\r\n    },\r\n};\r\npm.sendRequest(addDicodingIndonesiaUserRequest, (error, response) => {\r\n    console.log(error ? error : response);\r\n});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response status should be 200', () => {\r\n    pm.response.to.have.status(200);\r\n});\r\npm.test('response Content-Type header should have application/json value', () => {\r\n  pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8');\r\n});\r\npm.test('response body should an object', () => {\r\n    const responseJson = pm.response.json();\r\n    pm.expect(responseJson).to.be.an('object');\r\n});\r\npm.test('response body should have correct property and value', () => {\r\n    const responseJson = pm.response.json();\r\n    pm.expect(responseJson).to.have.ownProperty('status');\r\n    pm.expect(responseJson.status).to.equals('success');\r\n    pm.expect(responseJson).to.have.ownProperty('data');\r\n    pm.expect(responseJson.data).to.be.an('object');\r\n});\r\npm.test('response body data should contain users array', () => {\r\n    const { data } = pm.response.json();\r\n    pm.expect(data).to.have.ownProperty('users');\r\n    pm.expect(data.users).to.be.an('array');\r\n});\r\npm.test('the array users should have contain 2 user object related to dicoding username', () => {\r\n    const { data: { users } } = pm.response.json();\r\n    pm.expect(users).to.have.lengthOf(2);\r\n    users.forEach((user) => {\r\n        pm.expect(user).to.be.an('object');\r\n        pm.expect(user).to.have.ownProperty('id');\r\n        pm.expect(user).to.have.ownProperty('username');\r\n        pm.expect(user).to.have.ownProperty('fullname');\r\n        pm.expect(user.username).to.include('dicoding');\r\n    });\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/users?username=dicoding",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "username",
+                  "value": "dicoding"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Authentications",
+      "item": [
+        {
+          "name": "Post Authentication with Valid Credentials",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const postRequest = {\r\n    url: 'http://localhost:3000/users',\r\n    method: 'POST',\r\n    header: {\r\n    'Content-Type': 'application/json',\r\n    },\r\n    body: {\r\n        mode: 'raw',\r\n        raw: JSON.stringify({\r\n            username: 'testing',\r\n            password: pm.environment.get('newPassword'),\r\n            fullname: pm.environment.get('newFullname')\r\n        }),\r\n    },\r\n};\r\n \r\npm.sendRequest(postRequest, (error, response) => {\r\n    console.log(error ? error : response.json());\r\n});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response status code should have 201 value', () => {\r\n   pm.response.to.have.status(201);\r\n}); \r\n \r\npm.test('response Content-Type header should have application/json value', () => {\r\n  pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8');\r\n}); \r\n \r\npm.test('response body should an object', () => {\r\n    const responseJson = pm.response.json();\r\n    pm.expect(responseJson).to.be.an('object');\r\n});\r\n \r\npm.test('response body should have correct property and value', () => {\r\n    const responseJson = pm.response.json();\r\n \r\n    pm.expect(responseJson).to.ownProperty('status');\r\n    pm.expect(responseJson.status).to.equals('success');\r\n    pm.expect(responseJson).to.ownProperty('message');\r\n    pm.expect(responseJson.message).to.equals('Authentication berhasil ditambahkan');\r\n    pm.expect(responseJson).to.ownProperty('data');\r\n    pm.expect(responseJson.data).to.be.an('object');\r\n});\r\n \r\npm.test('response body data should have property accessToken and refreshToken with correct value', () => {\r\n    const responseJson = pm.response.json();\r\n    const { data } = responseJson;\r\n \r\n    pm.expect(data).to.have.ownProperty('accessToken');\r\n    pm.expect(data.accessToken).to.not.equals('');\r\n    pm.expect(data.accessToken).to.not.equals(null);\r\n    pm.expect(data).to.have.ownProperty('refreshToken');\r\n    pm.expect(data.refreshToken).to.not.equals('');\r\n    pm.expect(data.refreshToken).to.not.equals(null);\r\n \r\n \r\n    // menyimpan accessToken dan refreshToken di environment variable\r\n    pm.environment.set('accessToken', data.accessToken);\r\n    pm.environment.set('refreshToken', data.refreshToken);\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"username\": \"testing\",\r\n    \"password\": \"{{newPassword}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:3000/authentications",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "authentications"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Post Authentication with Invalid Credential",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response status code should have 401 value', () => {\r\n   pm.response.to.have.status(401);\r\n}); \r\n \r\npm.test('response Content-Type header should have application/json value', () => {\r\n  pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8');\r\n}); \r\n \r\npm.test('response body should an object', () => {\r\n    const responseJson = pm.response.json();\r\n    pm.expect(responseJson).to.be.an('object');\r\n});\r\n \r\npm.test('response body should have correct property and value', () => {\r\n    const responseJson = pm.response.json();\r\n \r\n    pm.expect(responseJson).to.ownProperty('status');\r\n    pm.expect(responseJson.status).to.equals('failed');\r\n    pm.expect(responseJson).to.ownProperty('message');\r\n    pm.expect(responseJson.message).to.equals('Kredensial yang Anda berikan salah');\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"username\": \"testing\",\r\n    \"password\": \"somebadpassword\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:3000/authentications",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "authentications"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Getting All Notes without Access Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response status code should have 401 value', () => {\r\n   pm.response.to.have.status(401);\r\n}); \r\n \r\npm.test('response Content-Type header should have application/json value', () => {\r\n  pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8');\r\n}); "
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "GET localhost:3000/notes",
+              "host": [
+                "GET localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "notes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Put Authentication with Valid Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response status code should have 200 value', () => {\r\n   pm.response.to.have.status(200);\r\n}); \r\n \r\npm.test('response Content-Type header should have application/json value', () => {\r\n  pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8');\r\n}); \r\n \r\npm.test('response body should an object', () => {\r\n    const responseJson = pm.response.json();\r\n    pm.expect(responseJson).to.be.an('object');\r\n});\r\n \r\npm.test('response body should have correct property and value', () => {\r\n    const responseJson = pm.response.json();\r\n \r\n    pm.expect(responseJson).to.ownProperty('status');\r\n    pm.expect(responseJson.status).to.equals('success');\r\n    pm.expect(responseJson).to.ownProperty('message');\r\n    pm.expect(responseJson.message).to.equals('Access Token berhasil diperbarui');\r\n    pm.expect(responseJson).to.ownProperty('data');\r\n    pm.expect(responseJson.data).to.be.an('object');\r\n});\r\n \r\npm.test('response body data should have property accessToken with correct value', () => {\r\n    const responseJson = pm.response.json();\r\n    const { data } = responseJson;\r\n \r\n    pm.expect(data).to.have.ownProperty('accessToken');\r\n    pm.expect(data.accessToken).to.not.equals('');\r\n    pm.expect(data.accessToken).to.not.equals(null);\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"refreshToken\": \"{{refreshToken}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:3000/authentications",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "authentications"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Put Authentications with Invalid Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response status code should have 400 value', () => {\r\n   pm.response.to.have.status(400);\r\n}); \r\n \r\npm.test('response Content-Type header should have application/json value', () => {\r\n  pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8');\r\n}); \r\n \r\npm.test('response body should an object', () => {\r\n    const responseJson = pm.response.json();\r\n    pm.expect(responseJson).to.be.an('object');\r\n});\r\n \r\npm.test('response body should have correct property and value', () => {\r\n    const responseJson = pm.response.json();\r\n \r\n    pm.expect(responseJson).to.ownProperty('status');\r\n    pm.expect(responseJson.status).to.equals('failed');\r\n    pm.expect(responseJson).to.ownProperty('message');\r\n    pm.expect(responseJson.message).to.equals('Refresh token tidak valid');\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"refreshToken\": \"xxxxx\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:3000/authentications",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "authentications"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Authentication with Valid Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response status code should have 200 value', () => {\r\n   pm.response.to.have.status(200);\r\n}); \r\n \r\npm.test('response Content-Type header should have application/json value', () => {\r\n  pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8');\r\n}); \r\n \r\npm.test('response body should an object', () => {\r\n    const responseJson = pm.response.json();\r\n    pm.expect(responseJson).to.be.an('object');\r\n});\r\n \r\npm.test('response body should have correct property and value', () => {\r\n    const responseJson = pm.response.json();\r\n \r\n    pm.expect(responseJson).to.ownProperty('status');\r\n    pm.expect(responseJson.status).to.equals('success');\r\n    pm.expect(responseJson).to.ownProperty('message');\r\n    pm.expect(responseJson.message).to.equals('Refresh token berhasil dihapus');\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"refreshToken\": \"{{refreshToken}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:3000/authentications",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "authentications"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Authentication with Invalid Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response status code should have 400 value', () => {\r\n   pm.response.to.have.status(400);\r\n}); \r\n \r\npm.test('response Content-Type header should have application/json value', () => {\r\n  pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8');\r\n}); \r\n \r\npm.test('response body should an object', () => {\r\n    const responseJson = pm.response.json();\r\n    pm.expect(responseJson).to.be.an('object');\r\n});\r\n \r\npm.test('response body should have correct property and value', () => {\r\n    const responseJson = pm.response.json();\r\n \r\n    pm.expect(responseJson).to.ownProperty('status');\r\n    pm.expect(responseJson.status).to.equals('failed');\r\n    pm.expect(responseJson).to.ownProperty('message');\r\n    pm.expect(responseJson.message).to.equals('Refresh token tidak valid');\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"refreshToken\": \"xxxxx\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:3000/authentications",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "authentications"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Notes",
+      "item": [
+        {
+          "name": "Adding Notes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response body should be an object', () => {\r\n   const responseJson = pm.response.json();\r\n   pm.expect(responseJson).to.be.an('object');\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"title\": \"Catatan A\",\r\n    \"tags\": [\"Android\", \"Web\"],\r\n    \"body\": \"Isi dari catatan A\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:3000/notes?title=catatan A&title=Android",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "notes"
+              ],
+              "query": [
+                {
+                  "key": "title",
+                  "value": "catatan A"
+                },
+                {
+                  "key": "title",
+                  "value": "Android"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Adding Notes with Bad Note Payload",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let badNotePayloads = pm.environment.get('badNotePayloads');  // ini akan bertipe Array\r\nif (!badNotePayloads || badNotePayloads.length === 0) {\r\n  // inisialisasi dengan sejumlah note yang tidak sesuai\r\n  badNotePayloads = [\r\n    { tags: [\"Android\", \"Web\"], body: \"Isi dari catatan A\" },\r\n    { title: 1, tags: [\"Android\", \"Web\"], body: \"Isi dari catatan A\" },\r\n    { title: \"Catatan A\", body: \"Isi dari catatan A\" },\r\n    { title: \"Catatan A\", tags: [1, \"2\"], body: \"Isi dari catatan A\" },\r\n    { title: \"Catatan A\", tags: [\"Android\", \"Web\"] },\r\n    { title: \"Catatan A\", tags: [\"Android\", \"Web\"], body: true }\r\n  ]\r\n}\r\n \r\nconst currentBadNotePayload = badNotePayloads.shift();  // hapus index 0, geser sisanya\r\npm.environment.set('currentBadNotePayload', JSON.stringify(currentBadNotePayload));\r\npm.environment.set('badNotePayloads', badNotePayloads);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"response status code should have 201 value\", function () {\n    pm.response.to.have.status(201);\n});\n\npm.test(\"response Content-Type header should have application/json; charset=utf-8 value\", function () {\n    pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\");\n});\n\npm.test(\"response body should be an object\", function () {\n    pm.expect(pm.response.json()).to.be.an(\"object\");\n});\n\npm.test(\"response body object should have correct property and value\", function () {\n    const jsonData = pm.response.json();\n    pm.expect(jsonData.status).to.equal(\"success\");\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": " {{currentBadNotePayload}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/notes",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "notes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Getting All Notes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response status code should have 200 value', () => {\r\n   pm.response.to.have.status(200);\r\n});\r\n\r\npm.test('response Content-Type header should have application/json value', () => {\r\n   pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8');\r\n}); \r\n\r\npm.test('response body should an object', () => {\r\n   const responseJson = pm.response.json();\r\n   pm.expect(responseJson).to.be.an('object');\r\n}); \r\n\r\npm.test('response body should have the correct property and value', () => {\r\n  const responseJson = pm.response.json();\r\n   pm.expect(responseJson).to.have.ownProperty('status');\r\n   pm.expect(responseJson.status).to.equals('success');\r\n   pm.expect(responseJson).to.have.ownProperty('data');\r\n   pm.expect(responseJson.data).to.be.an('object');\r\n}); \r\n\r\npm.test('response body data should have a notes array and contain at least 1 item', () => {\r\n   const responseJson = pm.response.json();\r\n   const { data } = responseJson;\r\n \r\n   pm.expect(data).to.have.ownProperty('notes');\r\n   pm.expect(data.notes).to.be.an('array');\r\n   pm.expect(data.notes).lengthOf.at.least(1);\r\n}); "
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "localhost:3000/notes",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "notes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Getting Specified Note",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response status code should have 200 value', () => {\r\n  pm.response.to.have.status(200);\r\n}); \r\n\r\npm.test('response Content-Type header should have application/json value', () => {\r\n   pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8');\r\n});\r\n\r\npm.test('response body should be an object', () => {\r\n   const responseJson = pm.response.json();\r\n   pm.expect(responseJson).to.be.an('object');\r\n});\r\n\r\npm.test('response body should have the correct property and value', () => {\r\n   const responseJson = pm.response.json();\r\n \r\n   pm.expect(responseJson).to.have.ownProperty('status');\r\n   pm.expect(responseJson.status).to.equals('success');\r\n   pm.expect(responseJson).to.have.ownProperty('data');\r\n   pm.expect(responseJson.data).to.be.an('object');\r\n}); \r\n\r\npm.test('response body data should contain note object', () => {\r\n   const responseJson = pm.response.json();\r\n   const { data } = responseJson;\r\n \r\n   pm.expect(data).to.have.ownProperty('note');\r\n   pm.expect(data).to.be.an('object');\r\n}); \r\n\r\npm.test('note object should contain correct value for id, title, body, tags, and username property', () => {\r\n   const responseJson = pm.response.json();\r\n   const { data } = responseJson;\r\n \r\n   const expectedId = pm.environment.get('noteId');\r\n   const expectedTitle = 'Catatan A';\r\n   const expectedTags = ['Android', 'Web'];\r\n   const expectedBody = 'Isi dari catatan A';\r\n \r\n   pm.expect(data).to.have.ownProperty('id');\r\n   pm.expect(data.id).to.equals(expectedId);\r\n   pm.expect(data).to.have.ownProperty('title');\r\n   pm.expect(data.title).to.equals(expectedTitle);\r\n   pm.expect(data).to.have.ownProperty('tags');\r\n   pm.expect(data.tags).to.eql(expectedTags);\r\n   pm.expect(data).to.have.ownProperty('body');\r\n   pm.expect(data.body).to.equals(expectedBody);\r\n   pm.expect(data).to.have.ownProperty('username');\r\n   pm.expect(data.username).to.be.a('string');\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "localhost:3000/notes/{{noteId}}",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "notes",
+                "{{noteId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Note",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response status code should have 200 value', () => {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\npm.test('response Content-Type header should have application/json value', () => {\r\n   pm.expect(pm.response.headers.get('Content-Type')).to.equals(\"application/json; charset=utf-8\");\r\n}); \r\n\r\npm.test('response body should be an object', () => {\r\n   const responseJson = pm.response.json();\r\n   pm.expect(responseJson).to.be.an('object');\r\n});\r\n\r\npm.test('response body should have correct property and value', () => {\r\n   const responseJson = pm.response.json();\r\n \r\n   pm.expect(responseJson).to.have.ownProperty('status');\r\n   pm.expect(responseJson.status).to.equals('success');\r\n   pm.expect(responseJson).to.have.ownProperty('message');\r\n   pm.expect(responseJson.message).to.equals('Catatan berhasil diperbarui');\r\n});\r\n\r\npm.test('when request the updated note', () => {\r\n    const noteId = pm.environment.get('noteId');\r\n    pm.sendRequest(`http://localhost:3000/notes/${noteId}`, (error, response) => {\r\n        if(!error) {\r\n            pm.test('then the updated note should contain the latest data', () => {\r\n              const responseJson = response.json();\r\n              const note = responseJson.data.note;\r\n                \r\n              const expectedTitle = 'Catatan A Revised';\r\n              const expectedTags = ['Android', 'Web'];\r\n              const expectedBody = 'Isi dari Catatan A Revised';\r\n \r\n              pm.expect(note.title).to.eql(expectedTitle);\r\n              pm.expect(note.tags).to.eql(expectedTags);\r\n              pm.expect(note.body).to.eql(expectedBody);\r\n            });\r\n        }\r\n    });\r\n});"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.sendRequest({\n    url: 'http://localhost:3000/notes',\n    method: 'POST',\n    header: {\n        'Content-Type': 'application/json'\n    },\n    body: {\n        mode: 'raw',\n        raw: JSON.stringify({\n            title: 'Catatan A',\n            tags: ['Android', 'Web'],\n            body: 'Isi dari catatan A'\n        })\n    }\n}, (error, response) => {\n    if (!error && response.code === 201) {\n        const responseJson = response.json();\n        pm.environment.set('noteId', responseJson.data.noteId);\n    }\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"title\": \"Catatan A Revised\",\r\n    \"tags\": [\"Android\", \"Web\"],\r\n    \"body\": \"Isi dari Catatan A Revised\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:3000/notes/{{noteId}}",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "notes",
+                "{{noteId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Note with Bad Note Payload",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let badNotePayloads = pm.environment.get('badNotePayloads');  // ini akan bertipe Array\r\n \r\nif (!badNotePayloads || badNotePayloads.length === 0) {\r\n  // inisialisasi dengan sejumlah note yang tidak sesuai\r\n  badNotePayloads = [\r\n   { tags: [\"Android\", \"Web\"], body: \"Isi dari catatan A\" },\r\n   { title: 1, tags: [\"Android\", \"Web\"], body: \"Isi dari catatan A\" },\r\n   { title: \"Catatan A\", body: \"Isi dari catatan A\" },\r\n   { title: \"Catatan A\", tags: [1, \"2\"], body: \"Isi dari catatan A\" },\r\n   { title: \"Catatan A\", tags: [\"Android\", \"Web\"] },\r\n   { title: \"Catatan A\", tags: [\"Android\", \"Web\"], body: true }\r\n ]\r\n}\r\n \r\nconst currentBadNotePayload = badNotePayloads.shift();  // hapus index 0, geser sisanya\r\npm.environment.set('currentBadNotePayload', JSON.stringify(currentBadNotePayload));\r\npm.environment.set('badNotePayloads', badNotePayloads);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"response status code should have 404 value\", function () {\n    pm.response.to.have.status(404);\n});\n\npm.test(\"response Content-Type header should have application/json; charset=utf-8 value\", function () {\n    pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\");\n});\n\npm.test(\"response body should be an object\", function () {\n    pm.expect(pm.response.json()).to.be.an(\"object\");\n});\n\npm.test(\"response body object should have correct property and value\", function () {\n    const jsonData = pm.response.json();\n    pm.expect(jsonData.code).to.eql(404);\n    pm.expect(jsonData.status).to.eql(\"failed\");\n    pm.expect(jsonData.message).to.eql(\"Catatan tidak ditemukan\");\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{{currentBadNotePayload}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/notes/{{noteId}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "notes",
+                "{{noteId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Note",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"response status code should have 404 value\", function () {\n    pm.response.to.have.status(404);\n});\n\npm.test(\"response Content-Type header should have application/json value\", function () {\n    pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\");\n});\n\npm.test(\"response body should be an object\", function () {\n    pm.response.to.be.an(\"object\");\n});\n\npm.test(\"response body should have correct property and value\", function () {\n    const jsonData = pm.response.json();\n    pm.expect(jsonData.status).to.equal(\"failed\");\n    pm.expect(jsonData.message).to.equal(\"Catatan tidak ditemukan\");\n});\n\npm.test(\"when request the deleted note\", function () {\n    pm.response.to.have.status(404);\n});"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  ""
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "localhost:3000/notes/{{noteId}",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "notes",
+                "{{noteId}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Authorizations",
+      "item": [
+        {
+          "name": "Adding Notes using User A",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response status code should have 201 value', () => {\r\n   pm.response.to.have.status(201);\r\n});\r\n \r\npm.test('response Content-Type header should have application/json value', () => {\r\n  pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8');\r\n});\r\n \r\npm.test('response body data should contains note id', () => {\r\n    const responseJson = pm.response.json();\r\n \r\n    pm.expect(responseJson).to.be.an('object');\r\n    pm.expect(responseJson).to.have.ownProperty('data');\r\n    pm.expect(responseJson.data).to.be.an('object');\r\n    pm.expect(responseJson.data).to.have.ownProperty('noteId');\r\n    pm.expect(responseJson.data.noteId).to.be.a('string');\r\n \r\n    // memasukkan noteId ke dalam environment variable\r\n    pm.environment.set('noteIdUserA', responseJson.data.noteId);\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessTokenUserA}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n   \"title\": \"Catatan A\",\r\n   \"tags\": [\"Android\", \"Web\"],\r\n   \"body\": \"Isi dari catatan A\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/notes",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "notes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Adding Notes using User B",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response status code should have 201 value', () => {\r\n   pm.response.to.have.status(201);\r\n}); \r\n \r\npm.test('response Content-Type header should have application/json value', () => {\r\n  pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8');\r\n});\r\n \r\npm.test('response body data should contains note id', () => {\r\n    const responseJson = pm.response.json();\r\n \r\n    pm.expect(responseJson).to.be.an('object');\r\n    pm.expect(responseJson).to.have.ownProperty('data');\r\n    pm.expect(responseJson.data).to.be.an('object');\r\n    pm.expect(responseJson.data).to.have.ownProperty('noteId');\r\n    pm.expect(responseJson.data.noteId).to.be.a('string');\r\n \r\n    // memasukkan noteId ke dalam environment variable\r\n    pm.environment.set('noteIdUserB', responseJson.data.noteId);\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessTokenUserB}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"title\": \"Catatan B\",\r\n    \"tags\": [\"Android\", \"Web\"],\r\n    \"body\": \"Isi dari catatan B\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/notes\n",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "notes\n"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Getting All Notes using User A",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response status code should have 200 value', () => {\r\n   pm.response.to.have.status(200);\r\n}); \r\n \r\npm.test('response Content-Type header should have application/json value', () => {\r\n  pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8');\r\n});\r\n \r\npm.test('response body data should contains notes array with 1 item', () => {\r\n    const responseJson = pm.response.json();\r\n \r\n    pm.expect(responseJson).to.be.an('object');\r\n    pm.expect(responseJson).to.have.ownProperty('data');\r\n    pm.expect(responseJson.data).to.be.an('object');\r\n    pm.expect(responseJson.data).to.have.ownProperty('notes');\r\n    pm.expect(responseJson.data.notes).to.be.an('array');\r\n    pm.expect(responseJson.data.notes).to.have.lengthOf(1);\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessTokenUserA}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/notes",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "notes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Getting All Notes using User B",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response status code should have 200 value', () => {\r\n   pm.response.to.have.status(200);\r\n}); \r\n \r\npm.test('response Content-Type header should have application/json value', () => {\r\n  pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8');\r\n});\r\n \r\npm.test('response body data should contains notes array with 1 item', () => {\r\n    const responseJson = pm.response.json();\r\n \r\n    pm.expect(responseJson).to.be.an('object');\r\n    pm.expect(responseJson).to.have.ownProperty('data');\r\n    pm.expect(responseJson.data).to.be.an('object');\r\n    pm.expect(responseJson.data).to.have.ownProperty('notes');\r\n    pm.expect(responseJson.data.notes).to.be.an('array');\r\n    pm.expect(responseJson.data.notes).to.have.lengthOf(1);\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessTokenUserB}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/notes",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "notes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Getting Note Owned by User A using User A",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response status code should have 200 value', () => {\r\n   pm.response.to.have.status(200);\r\n}); \r\n \r\npm.test('response Content-Type header should have application/json value', () => {\r\n  pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8');\r\n});\r\n \r\npm.test('response body data should contains object note', () => {\r\n    const responseJson = pm.response.json();\r\n \r\n    pm.expect(responseJson).to.be.an('object');\r\n    pm.expect(responseJson).to.have.ownProperty('data');\r\n    pm.expect(responseJson.data).to.be.an('object');\r\n    pm.expect(responseJson.data).to.have.ownProperty('note');\r\n    pm.expect(responseJson.data.note).to.be.an('object');\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessTokenUserA}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/notes/{{noteIdUserA}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "notes",
+                "{{noteIdUserA}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Getting Note Owned by User B using User B",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response status code should have 200 value', () => {\r\n   pm.response.to.have.status(200);\r\n}); \r\n \r\npm.test('response Content-Type header should have application/json value', () => {\r\n  pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8');\r\n});\r\n \r\npm.test('response body data should contains object note', () => {\r\n    const responseJson = pm.response.json();\r\n \r\n    pm.expect(responseJson).to.be.an('object');\r\n    pm.expect(responseJson).to.have.ownProperty('data');\r\n    pm.expect(responseJson.data).to.be.an('object');\r\n    pm.expect(responseJson.data).to.have.ownProperty('note');\r\n    pm.expect(responseJson.data.note).to.be.an('object');\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessTokenUserB}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/notes/{{noteIdUserB}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "notes",
+                "{{noteIdUserB}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Getting Note Owned by User A using User B",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response status code should have 403 value', () => {\r\n   pm.response.to.have.status(403);\r\n}); \r\n \r\npm.test('response Content-Type header should have application/json value', () => {\r\n  pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8');\r\n});\r\n \r\npm.test('response body should contain correct value', () => {\r\n    const responseJson = pm.response.json();\r\n \r\n    pm.expect(responseJson).to.be.an('object');\r\n    pm.expect(responseJson).to.have.ownProperty('status');\r\n    pm.expect(responseJson.status).to.equals('fail');\r\n    pm.expect(responseJson).to.have.ownProperty('message');\r\n    pm.expect(responseJson.message).to.equals('Anda tidak berhak mengakses resource ini');\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessTokenUserB}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/notes/{{noteIdUserA}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "notes",
+                "{{noteIdUserA}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Note Owned by User A using User A",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response status code should have 200 value', () => {\r\n   pm.response.to.have.status(200);\r\n}); \r\n \r\npm.test('response Content-Type header should have application/json value', () => {\r\n  pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8');\r\n});\r\n \r\n// tidak perlu melakukan uji pada nilai body response, karena sudah pernah diuji pada folder /notes"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessTokenUserA}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"title\": \"Catatan A Revised\",\r\n    \"tags\": [\"Android\", \"Web\"],\r\n    \"body\": \"Isi dari Catatan A Revised\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/notes/{{noteIdUserA}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "notes",
+                "{{noteIdUserA}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Note Owned by User B using User B",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response status code should have 200 value', () => {\r\n   pm.response.to.have.status(200);\r\n}); \r\n \r\npm.test('response Content-Type header should have application/json value', () => {\r\n  pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8');\r\n});\r\n \r\n// tidak perlu melakukan uji pada nilai body response, karena sudah pernah diuji pada folder /notes"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessTokenUserB}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"title\": \"Catatan B Revised\",\r\n    \"tags\": [\"Android\", \"Web\"],\r\n    \"body\": \"Isi dari Catatan B Revised\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/notes/{{noteIdUserB}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "notes",
+                "{{noteIdUserB}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Note Owned by User A using User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response status code should have 403 value', () => {\r\n   pm.response.to.have.status(403);\r\n}); \r\n \r\npm.test('response Content-Type header should have application/json value', () => {\r\n  pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8');\r\n});\r\n \r\npm.test('response body should contain correct value', () => {\r\n    const responseJson = pm.response.json();\r\n \r\n    pm.expect(responseJson).to.be.an('object');\r\n    pm.expect(responseJson).to.have.ownProperty('status');\r\n    pm.expect(responseJson.status).to.equals('fail');\r\n    pm.expect(responseJson).to.have.ownProperty('message');\r\n    pm.expect(responseJson.message).to.equals('Anda tidak berhak mengakses resource ini');\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessTokenUserB}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"title\": \"Catatan A Revised Again\",\r\n    \"tags\": [\"Android\", \"Web\"],\r\n    \"body\": \"Isi dari Catatan A Revised Again\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/notes/{{noteIdUserA}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "notes",
+                "{{noteIdUserA}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Note Owned by User A using User B",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response status code should have 403 value', () => {\r\n   pm.response.to.have.status(403);\r\n}); \r\n \r\npm.test('response Content-Type header should have application/json value', () => {\r\n  pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8');\r\n});\r\n \r\npm.test('response body should contain correct value', () => {\r\n    const responseJson = pm.response.json();\r\n \r\n    pm.expect(responseJson).to.be.an('object');\r\n    pm.expect(responseJson).to.have.ownProperty('status');\r\n    pm.expect(responseJson.status).to.equals('fail');\r\n    pm.expect(responseJson).to.have.ownProperty('message');\r\n    pm.expect(responseJson.message).to.equals('Anda tidak berhak mengakses resource ini');\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessTokenUserB}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/notes/{{noteIdUserA}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "notes",
+                "{{noteIdUserA}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Note Owned by User A using User A",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response status code should have 200 value', () => {\r\n   pm.response.to.have.status(200);\r\n}); \r\n \r\npm.test('response Content-Type header should have application/json value', () => {\r\n  pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8');\r\n});\r\n \r\n// tidak perlu melakukan uji pada nilai body response, karena sudah pernah diuji pada folder /notes"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessTokenUserA}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/notes/{{noteIdUserA}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "notes",
+                "{{noteIdUserA}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "New Request",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response status code should have 200 value', () => {\r\n   pm.response.to.have.status(200);\r\n}); \r\n \r\npm.test('response Content-Type header should have application/json value', () => {\r\n  pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8');\r\n});\r\n \r\n// tidak perlu melakukan uji pada nilai body response, karena sudah pernah diuji pada folder /notes"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessTokenUserB}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/notes/{{noteIdUserB}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "notes",
+                "{{noteIdUserB}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// membuat User A \r\nconst createUserARequest = {\r\n    url: 'http://localhost:3000/users',\r\n    method: 'POST',\r\n    header: {\r\n        'Content-Type': 'application/json',\r\n    },\r\n    body: {\r\n        mode: 'raw',\r\n        raw: JSON.stringify({\r\n            username: 'user_a',\r\n            password: 'secret',\r\n            fullname: 'User A',\r\n        }),\r\n    },\r\n};\r\n \r\npm.sendRequest(createUserARequest, (error, response) => {\r\n    console.log(error ? error : response);\r\n \r\n    // Setelah terdaftar, login dengan User A\r\n    const loginUserRequest = {\r\n        url: 'http://localhost:3000/authentications',\r\n        method: 'POST',\r\n        header: {\r\n            'Content-Type': 'application/json',\r\n        },\r\n        body: {\r\n            mode: 'raw',\r\n            raw: JSON.stringify({\r\n                username: 'user_a',\r\n                password: 'secret',\r\n            }),\r\n        },\r\n    };\r\n \r\n    pm.sendRequest(loginUserRequest, (error, response) => {\r\n        if (!error) {\r\n            // memasukkan access token User A ke environment variabel\r\n            const { data: { accessToken } } = response.json();\r\n            pm.environment.set('accessTokenUserA', accessToken);\r\n        }\r\n    });\r\n});\r\n \r\n// membuat User B \r\nconst createUserBRequest = {\r\n    url: 'http://localhost:3000/users',\r\n    method: 'POST',\r\n    header: {\r\n        'Content-Type': 'application/json',\r\n    },\r\n    body: {\r\n        mode: 'raw',\r\n        raw: JSON.stringify({\r\n            username: 'user_b',\r\n            password: 'secret',\r\n            fullname: 'User B',\r\n        }),\r\n    },\r\n};\r\n \r\npm.sendRequest(createUserBRequest, (error, response) => {\r\n    console.log(error ? error : response);\r\n \r\n    // Setelah terdaftar, login dengan User B\r\n    const loginUserRequest = {\r\n        url: 'http://localhost:3000/authentications',\r\n        method: 'POST',\r\n        header: {\r\n            'Content-Type': 'application/json',\r\n        },\r\n        body: {\r\n            mode: 'raw',\r\n            raw: JSON.stringify({\r\n                username: 'user_b',\r\n                password: 'secret',\r\n            }),\r\n        },\r\n    };\r\n \r\n    pm.sendRequest(loginUserRequest, (error, response) => {\r\n        if (!error) {\r\n            // memasukkan access token User B ke environment variabel\r\n            const { data: { accessToken } } = response.json();\r\n            pm.environment.set('accessTokenUserB', accessToken);\r\n        }\r\n    });\r\n});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Collaborations",
+      "item": [
+        {
+          "name": "Adding Note using Owner User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response status code should have 201 value', () => {\r\n   pm.response.to.have.status(201);\r\n}); \r\npm.test('response Content-Type header should have application/json value', () => {\r\n  pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8');\r\n});\r\npm.test('response body data should contains note id', () => {\r\n    const responseJson = pm.response.json();\r\n    pm.expect(responseJson).to.be.an('object');\r\n    pm.expect(responseJson).to.have.ownProperty('data');\r\n    pm.expect(responseJson.data).to.be.an('object');\r\n    pm.expect(responseJson.data).to.have.ownProperty('id');\r\n    pm.expect(responseJson.data.id).to.be.a('string');\r\n    // memasukkan noteId ke dalam environment variable\r\n    pm.environment.set('ownerNoteId', responseJson.data.id);\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n   \"title\": \"Catatan A\",\r\n   \"tags\": [\"Android\", \"Web\"],\r\n   \"body\": \"Isi dari catatan A\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/notes",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "notes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Adding Collaborator User as Collaborator to Added Note",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response status code should have 201 value', () => {\r\n   pm.response.to.have.status(201);\r\n}); \r\npm.test('response Content-Type header should have application/json value', () => {\r\n  pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8');\r\n});\r\npm.test('response body data should have collaborationId', () => {\r\n    const responseJson = pm.response.json();\r\n    pm.expect(responseJson).to.be.an('object');\r\n    pm.expect(responseJson).to.have.ownProperty('data');\r\n    pm.expect(responseJson.data).to.be.an('object');\r\n    pm.expect(responseJson.data).to.have.ownProperty('collaborationId');\r\n    pm.expect(responseJson.data.collaborationId).to.be.a('string');\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"noteId\": \"{{ownerNoteId}}\",\r\n    \"userId\": \"{{collaboratorUserId}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/collaborations",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "collaborations"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Getting All Notes using Collaborator",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response status code should have 200 value', () => {\r\n   pm.response.to.have.status(200);\r\n}); \r\npm.test('response Content-Type header should have application/json value', () => {\r\n  pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8');\r\n});\r\npm.test('response body data should contains notes array with 1 item', () => {\r\n    const responseJson = pm.response.json();\r\n    pm.expect(responseJson).to.be.an('object');\r\n    pm.expect(responseJson).to.have.ownProperty('data');\r\n    pm.expect(responseJson.data).to.be.an('object');\r\n    pm.expect(responseJson.data).to.have.ownProperty('notes');\r\n    pm.expect(responseJson.data.notes).to.be.an('array');\r\n    pm.expect(responseJson.data.notes).to.have.lengthOf(1);\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{collaboratorAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/notes",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "notes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Getting Added Note using Collaborator User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response status code should have 200 value', () => {\r\n   pm.response.to.have.status(200);\r\n}); \r\npm.test('response Content-Type header should have application/json value', () => {\r\n  pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8');\r\n});\r\n// tidak perlu melakukan uji pada nilai body response, karena sudah pernah diuji pada folder /notes"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{collaboratorAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/notes/{{ownerNoteId}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "notes",
+                "{{ownerNoteId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Editing Added Note using Collaborator User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response status code should have 200 value', () => {\r\n   pm.response.to.have.status(200);\r\n}); \r\npm.test('response Content-Type header should have application/json value', () => {\r\n  pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8');\r\n});\r\n// tidak perlu melakukan uji pada nilai body response, karena sudah pernah diuji pada folder /notes"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{collaboratorAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"title\": \"Catatan A Revised\",\r\n    \"tags\": [\"Android\", \"Web\"],\r\n    \"body\": \"Isi dari Catatan A Revised by collaborator\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/notes/{{ownerNoteId}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "notes",
+                "{{ownerNoteId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deleting Added Note using Collaborator User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response status code should have 403 value', () => {\r\n   pm.response.to.have.status(403);\r\n}); \r\npm.test('response Content-Type header should have application/json value', () => {\r\n  pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8');\r\n});\r\npm.test('response body should contain correct value', () => {\r\n    const responseJson = pm.response.json();\r\n    pm.expect(responseJson).to.be.an('object');\r\n    pm.expect(responseJson).to.have.ownProperty('status');\r\n    pm.expect(responseJson.status).to.equals('failed');\r\n    pm.expect(responseJson).to.have.ownProperty('message');\r\n    pm.expect(responseJson.message).to.equals('Anda tidak berhak mengakses resource ini');\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{collaboratorAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/notes/{{ownerNoteId}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "notes",
+                "{{ownerNoteId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Collaborator User from Collaborator to Added Note",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response status code should have 200 value', () => {\r\n   pm.response.to.have.status(200);\r\n}); \r\npm.test('response Content-Type header should have application/json value', () => {\r\n  pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8');\r\n});\r\npm.test('response body data should contains correct value', () => {\r\n    const responseJson = pm.response.json();\r\n    pm.expect(responseJson).to.be.an('object');\r\n    pm.expect(responseJson).to.have.ownProperty('status');\r\n    pm.expect(responseJson.status).to.equals('success');\r\n    pm.expect(responseJson).to.have.ownProperty('message');\r\n    pm.expect(responseJson.message).to.equals('Kolaborasi berhasil dihapus');\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"noteId\": \"{{ownerNoteId}}\",\r\n    \"userId\": \"{{collaboratorUserId}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/collaborations",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "collaborations"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Adding Collaborator User as Collaborator to Added Note using Collaborator User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response status code should have 403 value', () => {\r\n   pm.response.to.have.status(403);\r\n}); \r\npm.test('response Content-Type header should have application/json value', () => {\r\n  pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8');\r\n});\r\npm.test('response body should contain correct value', () => {\r\n    const responseJson = pm.response.json();\r\n    pm.expect(responseJson).to.be.an('object');\r\n    pm.expect(responseJson).to.have.ownProperty('status');\r\n    pm.expect(responseJson.status).to.equals('fail');\r\n    pm.expect(responseJson).to.have.ownProperty('message');\r\n    pm.expect(responseJson.message).to.equals('Anda tidak berhak mengakses resource ini');\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{collaboratorAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"noteId\": \"{{ownerNoteId}}\",\r\n    \"userId\": \"{{collaboratorUserId}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/collaborations",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "collaborations"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Getting All Notes using Collaborator User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response status code should have 200 value', () => {\r\n   pm.response.to.have.status(200);\r\n}); \r\npm.test('response Content-Type header should have application/json value', () => {\r\n  pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8');\r\n});\r\npm.test('response body data should contains notes array with 0 item', () => {\r\n    const responseJson = pm.response.json();\r\n    pm.expect(responseJson).to.be.an('object');\r\n    pm.expect(responseJson).to.have.ownProperty('data');\r\n    pm.expect(responseJson.data).to.be.an('object');\r\n    pm.expect(responseJson.data).to.have.ownProperty('notes');\r\n    pm.expect(responseJson.data.notes).to.be.an('array');\r\n    pm.expect(responseJson.data.notes).to.have.lengthOf(0);\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{collaboratorAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/notes",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "notes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Getting Added Note using Collaborator User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response status code should have 403 value', () => {\r\n   pm.response.to.have.status(403);\r\n}); \r\npm.test('response Content-Type header should have application/json value', () => {\r\n  pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8');\r\n});\r\npm.test('response body should contain correct value', () => {\r\n    const responseJson = pm.response.json();\r\n    pm.expect(responseJson).to.be.an('object');\r\n    pm.expect(responseJson).to.have.ownProperty('status');\r\n    pm.expect(responseJson.status).to.equals('failed');\r\n    pm.expect(responseJson).to.have.ownProperty('message');\r\n    pm.expect(responseJson.message).to.equals('Anda tidak berhak mengakses resource ini');\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{collaboratorAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/notes/{{ownerNoteId}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "notes",
+                "{{ownerNoteId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Editing Added Note using Collaborator User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response status code should have 403 value', () => {\r\n   pm.response.to.have.status(403);\r\n}); \r\npm.test('response Content-Type header should have application/json value', () => {\r\n  pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8');\r\n});\r\npm.test('response body should contain correct value', () => {\r\n    const responseJson = pm.response.json();\r\n    pm.expect(responseJson).to.be.an('object');\r\n    pm.expect(responseJson).to.have.ownProperty('status');\r\n    pm.expect(responseJson.status).to.equals('failed');\r\n    pm.expect(responseJson).to.have.ownProperty('message');\r\n    pm.expect(responseJson.message).to.equals('Anda tidak berhak mengakses resource ini');\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{collaboratorAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"title\": \"Catatan A Revised\",\r\n    \"tags\": [\"Android\", \"Web\"],\r\n    \"body\": \"Isi dari Catatan A Revised by collaborator\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/notes/{{ownerNoteId}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "notes",
+                "{{ownerNoteId}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deleting Added Note using Owner User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response status code should have 200 value', () => {\r\n    pm.response.to.have.status(200);\r\n});\r\npm.test('response Content-Type header should have application/json value', () => {\r\n    pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8')\r\n});\r\n// tidak perlu melakukan uji pada nilai body response, karena sudah pernah diuji pada folder /notes"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/notes/{{ownerNoteId}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "notes",
+                "{{ownerNoteId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Membuat Owner User\r\nconst createOwnerUserRequest = {\r\n    url: 'http://localhost:3000/users',\r\n    method: 'POST',\r\n    header: {\r\n        'Content-Type': 'application/json',\r\n    },\r\n    body: {\r\n        mode: 'raw',\r\n        raw: JSON.stringify({\r\n            username: 'owner_user',\r\n            password: 'secret',\r\n            fullname: 'Owner',\r\n        }),\r\n    },\r\n};\r\npm.sendRequest(createOwnerUserRequest, (error, response) => {\r\n    console.log(error ? error : response);\r\n    // Setelah terdaftar, login dengan Owner User\r\n     const loginOwnerUserRequest = {\r\n        url: 'http://localhost:3000/authentications',\r\n        method: 'POST',\r\n        header: {\r\n            'Content-Type': 'application/json',\r\n        },\r\n        body: {\r\n            mode: 'raw',\r\n            raw: JSON.stringify({\r\n                username: 'owner_user',\r\n                password: 'secret',\r\n            }),\r\n        },\r\n    };\r\n    pm.sendRequest(loginOwnerUserRequest, (error, response) => {\r\n        if (!error) {\r\n            // memasukkan access token Owner User ke environment variabel\r\n            const { data: { accessToken } } = response.json();\r\n            pm.environment.set('ownerAccessToken', accessToken);\r\n        }\r\n    });\r\n});\r\n// Membuat Collaborator User\r\nconst createCollaboratorUserRequest = {\r\n    url: 'http://localhost:3000/users',\r\n    method: 'POST',\r\n    header: {\r\n        'Content-Type': 'application/json',\r\n    },\r\n    body: {\r\n        mode: 'raw',\r\n        raw: JSON.stringify({\r\n            username: 'collaborator_user',\r\n            password: 'secret',\r\n            fullname: 'Collaborator',\r\n        }),\r\n    },\r\n};\r\npm.sendRequest(createCollaboratorUserRequest, (error, response) => {\r\n    console.log(error ? error : response);\r\n    if (!error) {\r\n        if (response.code === 201) {\r\n            // memasukkan id collaborator user ke environment variabel\r\n            const { data : { userId } } = response.json();\r\n            pm.environment.set('collaboratorUserId', userId);\r\n        }\r\n    }\r\n    // Setelah terdaftar, login dengan Collaborator User\r\n     const loginCollaboratorUserRequest = {\r\n        url: 'http://localhost:3000/authentications',\r\n        method: 'POST',\r\n        header: {\r\n            'Content-Type': 'application/json',\r\n        },\r\n        body: {\r\n            mode: 'raw',\r\n            raw: JSON.stringify({\r\n                username: 'collaborator_user',\r\n                password: 'secret',\r\n            }),\r\n        },\r\n    };\r\n     pm.sendRequest(loginCollaboratorUserRequest, (error, response) => {\r\n        if (!error) {\r\n            // memasukkan access token Owner User ke environment variabel\r\n            const { data: { accessToken } } = response.json();\r\n            pm.environment.set('collaboratorAccessToken', accessToken);\r\n        }\r\n    });\r\n});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Exports",
+      "item": [
+        {
+          "name": "Exports Notes with Valid Payload",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response code should have 201 value', () => {\r\n    pm.response.to.have.status(201);\r\n});\r\npm.test('response Content-Type header should have application/json value', () => {\r\n  pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8');\r\n});\r\npm.test('response body should be an object', () => {\r\n   const responseJson = pm.response.json();\r\n   pm.expect(responseJson).to.be.an('object');\r\n});\r\npm.test('response body should have the correct property and value', () => {\r\n   const responseJson = pm.response.json();\r\n \r\n   pm.expect(responseJson).to.have.ownProperty('status');\r\n   pm.expect(responseJson.status).to.equals('success');\r\n   pm.expect(responseJson).to.have.ownProperty('message');\r\n   pm.expect(responseJson.message).to.equals('Permintaan Anda dalam antrean');\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessTokenUserA}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"targetEmail\": \"<email>\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:3000/export/notes",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "export",
+                "notes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Exports Notes with Bad Payload",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let badExportPayloads = pm.environment.get('badExportPayloads');\r\nif (!badExportPayloads || badExportPayloads.length === 0) {\r\n    badExportPayloads = [\r\n       {},\r\n       { targetEmail: true },\r\n       { targetEmail: 0 },\r\n       { targetEmail: '' },\r\n       { targetEmail: 'John' },\r\n       { targetEmail: 'qwert123' },\r\n    ];\r\n}\r\nconst currentBadExportPayload = badExportPayloads.shift();\r\npm.environment.set('currentBadExportPayload', JSON.stringify(currentBadExportPayload));\r\npm.environment.set('badExportPayloads', badExportPayloads);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response code should have 400 value', () => {\r\n    pm.response.to.have.status(400);\r\n});\r\npm.test('response Content-Type header should have application/json value', () => {\r\n  pm.expect(pm.response.headers.get('Content-Type')).to.equals('application/json; charset=utf-8');\r\n});\r\npm.test('response body should be an object', () => {\r\n   const responseJson = pm.response.json();\r\n   pm.expect(responseJson).to.be.an('object');\r\n});\r\npm.test('response body should have the correct property and value', () => {\r\n   const responseJson = pm.response.json();\r\n \r\n   pm.expect(responseJson).to.have.ownProperty('status');\r\n   pm.expect(responseJson.status).to.equals('failed');\r\n   pm.expect(responseJson).to.have.ownProperty('message');\r\n   pm.expect(responseJson.message).to.be.a('string');\r\n});\r\nconst repeatRequestUntilDatasetEmpty = () => {\r\n    const badExportPayloads = pm.environment.get('badExportPayloads');\r\n    if(badExportPayloads && badExportPayloads.length > 0) {\r\n        postman.setNextRequest('Exports Notes with Bad Payload');\r\n    }\r\n}\r\nrepeatRequestUntilDatasetEmpty();"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessTokenUserA}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{{currentBadExportPayload}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:3000/export/notes",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "export",
+                "notes"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// membuat User A \r\nconst createUserARequest = {\r\n    url: 'http://localhost:3000/users',\r\n    method: 'POST',\r\n    header: {\r\n        'Content-Type': 'application/json',\r\n    },\r\n    body: {\r\n        mode: 'raw',\r\n        raw: JSON.stringify({\r\n            username: 'user_a',\r\n            password: 'secret',\r\n            fullname: 'User A',\r\n        }),\r\n    },\r\n};\r\npm.sendRequest(createUserARequest, (error, response) => {\r\n    console.log(error ? error : response);\r\n    // Setelah terdaftar, login dengan User A\r\n    const loginUserRequest = {\r\n        url: 'http://localhost:3000/authentications',\r\n        method: 'POST',\r\n        header: {\r\n            'Content-Type': 'application/json',\r\n        },\r\n        body: {\r\n            mode: 'raw',\r\n            raw: JSON.stringify({\r\n                username: 'user_a',\r\n                password: 'secret',\r\n            }),\r\n        },\r\n    };\r\n    pm.sendRequest(loginUserRequest, (error, response) => {\r\n        if (!error) {\r\n            // memasukkan access token User A ke environment variabel\r\n            const { data: { accessToken } } = response.json();\r\n            pm.environment.set('accessTokenUserA', accessToken);\r\n        }\r\n    });\r\n});"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
